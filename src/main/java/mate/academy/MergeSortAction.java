@@ -1,15 +1,16 @@
 package mate.academy;
 
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.concurrent.RecursiveAction;
 
 public class MergeSortAction extends RecursiveAction {
 
-    private static final int THRESHOLD = 10;
+    private static final int THRESHOLD = 2;
     private final int[] array;
 
     public MergeSortAction(int[] array) {
-        this.array = array;
+        this.array = Objects.requireNonNull(array, "array must not be null");
     }
 
     @Override
@@ -21,39 +22,41 @@ public class MergeSortAction extends RecursiveAction {
 
         int mid = array.length / 2;
 
-        int[] leftPart = new int[mid];
-        int[] rightPart = new int[array.length - mid];
+        int[] left = new int[mid];
+        int[] right = new int[array.length - mid];
 
-        System.arraycopy(array, 0, leftPart, 0, mid);
-        System.arraycopy(array, mid, rightPart, 0, array.length - mid);
+        System.arraycopy(array, 0, left, 0, mid);
+        System.arraycopy(array, mid, right, 0, array.length - mid);
 
-        MergeSortAction leftTask = new MergeSortAction(leftPart);
-        MergeSortAction rightTask = new MergeSortAction(rightPart);
+        MergeSortAction leftTask = new MergeSortAction(left);
+        MergeSortAction rightTask = new MergeSortAction(right);
 
-        invokeAll(leftTask, rightTask);
+        leftTask.fork();
+        rightTask.compute();
+        leftTask.join();
 
-        merge(leftPart, rightPart, array);
+        merge(left, right, array);
     }
 
-    private void merge(int[] left, int[] right, int[] dest) {
+    private void merge(int[] left, int[] right, int[] result) {
         int i = 0;
         int j = 0;
         int k = 0;
 
         while (i < left.length && j < right.length) {
             if (left[i] <= right[j]) {
-                dest[k++] = left[i++];
+                result[k++] = left[i++];
             } else {
-                dest[k++] = right[j++];
+                result[k++] = right[j++];
             }
         }
 
         while (i < left.length) {
-            dest[k++] = left[i++];
+            result[k++] = left[i++];
         }
 
         while (j < right.length) {
-            dest[k++] = right[j++];
+            result[k++] = right[j++];
         }
     }
 }
